@@ -521,9 +521,9 @@ export default function NotesPage() {
 
       <ConfirmDialog
         open={confirmingDelete}
-        title="Archive this note?"
-        description="It will be removed from your notes list but kept in the database."
-        confirmLabel="Archive note"
+        title="Delete this note?"
+        description="It will be permanently removed from your notes list"
+        confirmLabel="Delete note"
         tone="danger"
         busy={deleting}
         onConfirm={() => void handleDelete()}

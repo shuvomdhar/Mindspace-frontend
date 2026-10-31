@@ -56,7 +56,7 @@ export default function AuthLayout({
 
         <div className="relative z-10 max-w-md">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-indigo-100 backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="h-5 w-3.5" />
             Your thoughts, organised
           </span>
           <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight">
@@ -91,7 +91,7 @@ export default function AuthLayout({
           </ul>
         </div>
 
-        <p className="relative z-10 text-xs text-slate-500">
+        <p className="relative z-10 text-xs text-slate-500 mt-10">
           Mindspace · built with Next.js, Express and Supabase
         </p>
       </aside>
