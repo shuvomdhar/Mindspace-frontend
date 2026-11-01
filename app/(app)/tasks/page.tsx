@@ -224,8 +224,8 @@ export default function TasksPage() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <section className={`${cardClass} flex min-h-[440px] flex-col overflow-hidden`}>
+      <div className="mt-6 grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
+        <section className={`${cardClass} overflow-hidden`}>
           <div className="border-b border-slate-100 p-3 dark:border-slate-800">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -262,7 +262,7 @@ export default function TasksPage() {
             </div>
           </div>
 
-          <div className="max-h-[calc(100vh-20rem)] flex-1 overflow-y-auto p-2">
+          <div className="p-2">
             {loading && (
               <div className="space-y-2 p-1">
                 {[0, 1, 2, 3].map((item) => (
@@ -317,7 +317,7 @@ export default function TasksPage() {
                   >
                     <span className="flex items-start justify-between gap-2">
                       <span
-                        className={`truncate text-sm font-medium ${
+                        className={`min-w-0 flex-1 break-words text-sm font-medium ${
                           active
                             ? 'text-indigo-900 dark:text-indigo-200'
                             : 'text-slate-700 dark:text-slate-300'
@@ -325,7 +325,9 @@ export default function TasksPage() {
                       >
                         {task.title}
                       </span>
-                      <StatusBadge status={task.status} />
+                      <span className="shrink-0">
+                        <StatusBadge status={task.status} />
+                      </span>
                     </span>
                     {task.description_text.trim() && (
                       <span className="mt-1 block truncate text-xs text-slate-400">

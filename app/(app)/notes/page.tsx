@@ -324,8 +324,8 @@ export default function NotesPage() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <section className={`${cardClass} flex min-h-[420px] flex-col overflow-hidden`}>
+      <div className="mt-6 grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <section className={`${cardClass} overflow-hidden`}>
           <div className="border-b border-slate-100 p-3 dark:border-slate-800">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -340,7 +340,7 @@ export default function NotesPage() {
             </div>
           </div>
 
-          <div className="max-h-[calc(100vh-17rem)] flex-1 overflow-y-auto p-2">
+          <div className="p-2">
             {loading && (
               <div className="space-y-2 p-1">
                 {[0, 1, 2, 3].map((item) => (
@@ -393,16 +393,16 @@ export default function NotesPage() {
                         : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-start gap-2">
                       <FileText
-                        className={`h-3.5 w-3.5 shrink-0 ${
+                        className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
                           active
                             ? 'text-indigo-500 dark:text-indigo-400'
                             : 'text-slate-400 dark:text-slate-500'
                         }`}
                       />
                       <span
-                        className={`truncate text-sm font-medium ${
+                        className={`min-w-0 flex-1 break-words text-sm font-medium ${
                           active
                             ? 'text-indigo-900 dark:text-indigo-200'
                             : 'text-slate-700 dark:text-slate-300'
