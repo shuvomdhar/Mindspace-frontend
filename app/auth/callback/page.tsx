@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CircleAlert } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Spinner } from '@/components/spinner';
-import { googleAuthErrorMessage } from '@/lib/auth';
+import { googleAuthErrorMessage, safeNextPath } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
@@ -18,6 +18,7 @@ export default function AuthCallbackPage() {
 
     const query = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const nextPath = safeNextPath(query.get('next'));
     const oauthError =
       query.get('error_description') ??
       query.get('error') ??
@@ -34,20 +35,20 @@ export default function AuthCallbackPage() {
       };
     }
 
-    const goToDashboard = () => {
-      if (!cancelled) router.replace('/dashboard');
+    const goToDestination = () => {
+      if (!cancelled) router.replace(nextPath);
     };
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) goToDashboard();
+      if (session) goToDestination();
     });
 
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (data.session) goToDashboard();
+        if (data.session) goToDestination();
       })
       .catch(() => {
         // The timeout below surfaces a friendly error.
@@ -56,10 +57,10 @@ export default function AuthCallbackPage() {
     const timeout = window.setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        goToDashboard();
+        goToDestination();
       } else if (!cancelled) {
         setError(
-          'We could not complete the sign-in. The link may have expired — please try again.',
+          'We could not complete the request. The link may have expired — please try again.',
         );
       }
     }, 10_000);
@@ -84,7 +85,7 @@ export default function AuthCallbackPage() {
               <CircleAlert className="h-5 w-5" />
             </span>
             <h1 className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Sign-in failed
+              We couldn&apos;t complete that
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
               {error}
@@ -99,9 +100,9 @@ export default function AuthCallbackPage() {
         ) : (
           <div className="mt-8 flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400">
             <Spinner className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            <p className="text-sm font-medium">Finishing sign-in…</p>
+            <p className="text-sm font-medium">Finishing up…</p>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              You will be redirected to your dashboard.
+              You will be redirected in a moment.
             </p>
           </div>
         )}

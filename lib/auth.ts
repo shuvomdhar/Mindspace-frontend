@@ -5,6 +5,11 @@ export function getAuthCallbackUrl(): string {
   return `${window.location.origin}/auth/callback`;
 }
 
+/** The callback URL that sends a recovery link on to the reset-password form. */
+export function getPasswordResetCallbackUrl(): string {
+  return `${getAuthCallbackUrl()}?next=/reset-password`;
+}
+
 export async function signInWithGoogle() {
   return supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -13,6 +18,25 @@ export async function signInWithGoogle() {
       queryParams: { prompt: 'select_account' },
     },
   });
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: getPasswordResetCallbackUrl(),
+  });
+}
+
+/** Only allow internal, relative paths from the `next` query parameter. */
+export function safeNextPath(value: string | null): string {
+  if (
+    !value ||
+    !value.startsWith('/') ||
+    value.startsWith('//') ||
+    value.includes('\\')
+  ) {
+    return '/dashboard';
+  }
+  return value;
 }
 
 /**

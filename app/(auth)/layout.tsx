@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Kanban, ListTodo, NotebookPen, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { Logo } from '@/components/logo';
@@ -32,14 +32,16 @@ export default function AuthLayout({
 }) {
   const { session, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isPasswordReset = pathname === '/reset-password';
 
   useEffect(() => {
-    if (!loading && session) {
+    if (!loading && session && !isPasswordReset) {
       router.replace('/dashboard');
     }
-  }, [loading, session, router]);
+  }, [isPasswordReset, loading, session, router]);
 
-  if (loading || session) {
+  if (loading || (session && !isPasswordReset)) {
     return <FullPageLoader label="Checking your session…" />;
   }
 

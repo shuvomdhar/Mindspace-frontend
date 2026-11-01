@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CircleAlert,
+  KeyRound,
   Mail,
   Moon,
   Save,
@@ -16,6 +17,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ErrorBanner } from '@/components/error-banner';
 import { Spinner } from '@/components/spinner';
 import { api, errorMessage } from '@/lib/api';
+import { sendPasswordResetEmail } from '@/lib/auth';
 import { toggleTheme, useIsClient, useTheme } from '@/lib/theme';
 import {
   cardClass,
@@ -25,6 +27,7 @@ import {
   pageSubtitleClass,
   pageTitleClass,
   primaryButton,
+  secondaryButton,
 } from '@/lib/styles';
 import type { Profile, ProfileStatus } from '@/lib/types';
 
@@ -65,6 +68,8 @@ export default function SettingsPage() {
   const [confirmingDeleteAccount, setConfirmingDeleteAccount] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -104,6 +109,31 @@ export default function SettingsPage() {
       setError(errorMessage(saveError));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handlePasswordReset() {
+    setSendingReset(true);
+    setResetSent(false);
+    setError(null);
+
+    try {
+      if (!profile?.email) {
+        throw new Error('No email address is available for this account.');
+      }
+
+      const { error: resetError } = await sendPasswordResetEmail(profile.email);
+
+      if (resetError) {
+        setError(resetError.message);
+        return;
+      }
+
+      setResetSent(true);
+    } catch (resetError) {
+      setError(errorMessage(resetError));
+    } finally {
+      setSendingReset(false);
     }
   }
 
@@ -281,6 +311,54 @@ export default function SettingsPage() {
                 <Sun className="h-3.5 w-3.5" />
               )}
             </span>
+          </button>
+        </div>
+      </section>
+
+      <section className={`${cardClass} mt-6 overflow-hidden`}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-300">
+              <KeyRound className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Password
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                Reset your password by email.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+              Password reset
+            </p>
+            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+              We&apos;ll send a secure reset link to {profile?.email ?? 'your email'}.
+              Open it in this browser.
+            </p>
+            {resetSent && (
+              <p className="mt-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                Reset link sent. Check your inbox.
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => void handlePasswordReset()}
+            disabled={sendingReset || loading || !profile?.email}
+            className={secondaryButton}
+          >
+            {sendingReset ? (
+              <Spinner className="h-4 w-4" />
+            ) : (
+              <KeyRound className="h-4 w-4" />
+            )}
+            {sendingReset ? 'Sending…' : 'Send reset link'}
           </button>
         </div>
       </section>
