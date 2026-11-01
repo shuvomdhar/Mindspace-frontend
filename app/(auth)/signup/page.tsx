@@ -3,11 +3,24 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import {
+  CheckCircle2,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+} from 'lucide-react';
 import { ErrorBanner } from '@/components/error-banner';
 import { GoogleIcon } from '@/components/google-icon';
 import { Spinner } from '@/components/spinner';
-import { googleAuthErrorMessage, signInWithGoogle } from '@/lib/auth';
+import {
+  emailAuthErrorMessage,
+  googleAuthErrorMessage,
+  resendConfirmationEmail,
+  signInWithGoogle,
+} from '@/lib/auth';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import {
   inputClass,
@@ -27,11 +40,14 @@ export default function SignupPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [existingUser, setExistingUser] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setNotice(null);
+    setExistingUser(false);
 
     if (!isSupabaseConfigured) {
       setError(
@@ -62,7 +78,7 @@ export default function SignupPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(emailAuthErrorMessage(signUpError.message));
         return;
       }
 
@@ -71,13 +87,44 @@ export default function SignupPage() {
         return;
       }
 
+      if (data.user?.identities?.length === 0) {
+        setExistingUser(true);
+        setNotice(
+          'This email is already registered. Sign in instead, or resend the confirmation email if you have not confirmed it yet.',
+        );
+        return;
+      }
+
       setNotice(
-        'Account created. Check your inbox and confirm your email address to finish signing in.',
+        'Account created. Check your inbox and spam folder, then confirm your email address to finish signing in.',
       );
     } catch {
       setError('Could not create your account. Please try again.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setError(null);
+    setResendLoading(true);
+
+    try {
+      const { error: resendError } = await resendConfirmationEmail(email.trim());
+
+      if (resendError) {
+        setError(emailAuthErrorMessage(resendError.message));
+        return;
+      }
+
+      setExistingUser(false);
+      setNotice(
+        'Confirmation email resent. Check your inbox and spam folder for the new link.',
+      );
+    } catch {
+      setError('Could not resend the confirmation email. Please try again.');
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -123,9 +170,32 @@ export default function SignupPage() {
         {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
         {notice && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>{notice}</p>
+          <div
+            className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm ${
+              existingUser
+                ? 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+            }`}
+          >
+            {existingUser ? (
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            ) : (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            )}
+            <div className="space-y-2">
+              <p>{notice}</p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendLoading}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2 transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {resendLoading ? <Spinner className="h-3.5 w-3.5" /> : null}
+                {resendLoading
+                  ? 'Sending…'
+                  : 'Resend confirmation email'}
+              </button>
+            </div>
           </div>
         )}
 

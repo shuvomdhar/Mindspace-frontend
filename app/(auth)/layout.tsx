@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Kanban, ListTodo, NotebookPen, Sparkles } from 'lucide-react';
+import { Kanban, ListTodo, NotebookPen } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { Logo } from '@/components/logo';
 import { FullPageLoader } from '@/components/spinner';
@@ -57,10 +57,10 @@ export default function AuthLayout({
         </div>
 
         <div className="relative z-10 max-w-md">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 mt-2.5 text-xs font-medium text-indigo-100 backdrop-blur">
+          {/* <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 mt-2.5 text-xs font-medium text-indigo-100 backdrop-blur">
             <Sparkles className="h-2.5 w-3.5" />
             Your thoughts, organised
-          </span>
+          </span> */}
           <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight">
             A quiet place for
             <br />
