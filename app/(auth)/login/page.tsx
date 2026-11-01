@@ -11,7 +11,6 @@ import { Spinner } from '@/components/spinner';
 import {
   emailAuthErrorMessage,
   googleAuthErrorMessage,
-  resendConfirmationEmail,
   signInWithGoogle,
 } from '@/lib/auth';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -31,15 +30,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [needsConfirmation, setNeedsConfirmation] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendNotice, setResendNotice] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setNeedsConfirmation(false);
-    setResendNotice(null);
 
     if (!isSupabaseConfigured) {
       setError(
@@ -56,9 +50,6 @@ export default function LoginPage() {
       });
 
       if (signInError) {
-        if (signInError.message.toLowerCase().includes('email not confirmed')) {
-          setNeedsConfirmation(true);
-        }
         setError(emailAuthErrorMessage(signInError.message));
         return;
       }
@@ -68,29 +59,6 @@ export default function LoginPage() {
       setError('Could not sign you in. Please try again.');
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleResend() {
-    setError(null);
-    setResendNotice(null);
-    setResendLoading(true);
-
-    try {
-      const { error: resendError } = await resendConfirmationEmail(email.trim());
-
-      if (resendError) {
-        setError(emailAuthErrorMessage(resendError.message));
-        return;
-      }
-
-      setResendNotice(
-        'Confirmation email resent. Check your inbox and spam folder for the new link.',
-      );
-    } catch {
-      setError('Could not resend the confirmation email. Please try again.');
-    } finally {
-      setResendLoading(false);
     }
   }
 
@@ -140,31 +108,6 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="mt-7 space-y-5">
         {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
-        {needsConfirmation && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900/60">
-            <p className="text-slate-600 dark:text-slate-300">
-              Did not receive the email? Check your spam folder, then request a
-              new confirmation link.
-            </p>
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resendLoading}
-              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-indigo-600 transition hover:text-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:text-indigo-400 dark:hover:text-indigo-300"
-            >
-              {resendLoading ? <Spinner className="h-3.5 w-3.5" /> : null}
-              {resendLoading
-                ? 'Sending…'
-                : 'Resend confirmation email'}
-            </button>
-            {resendNotice && (
-              <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">
-                {resendNotice}
-              </p>
-            )}
-          </div>
-        )}
-
         <div>
           <label htmlFor="email" className={labelClass}>
             Email address
@@ -178,11 +121,7 @@ export default function LoginPage() {
               autoComplete="email"
               required
               value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                setNeedsConfirmation(false);
-                setResendNotice(null);
-              }}
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               className={`${inputClass} pl-10`}
             />

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail } from 'lucide-react';
 import { ErrorBanner } from '@/components/error-banner';
 import { Spinner } from '@/components/spinner';
-import { sendPasswordResetEmail } from '@/lib/auth';
+import { emailAuthErrorMessage, sendPasswordResetEmail } from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   inputClass,
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       const { error: resetError } = await sendPasswordResetEmail(email.trim());
 
       if (resetError) {
-        setError(resetError.message);
+        setError(emailAuthErrorMessage(resetError.message));
         return;
       }
 

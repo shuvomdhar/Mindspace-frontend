@@ -26,46 +26,39 @@ export async function sendPasswordResetEmail(email: string) {
   });
 }
 
-export async function resendConfirmationEmail(email: string) {
-  return supabase.auth.resend({
-    type: 'signup',
-    email,
-    options: { emailRedirectTo: getAuthCallbackUrl() },
-  });
-}
-
-/** Actionable messages for email-confirmation and SMTP problems. */
+/** Actionable messages for email authentication and password-reset problems. */
 export function emailAuthErrorMessage(message: string): string {
   const normalized = message.toLowerCase();
 
   if (normalized.includes('email not confirmed')) {
-    return 'Your email address is not confirmed yet. Check your inbox and spam folder, or resend the confirmation email below.';
+    return 'This Supabase project still requires email confirmation. Open Supabase Dashboard → Authentication → Providers → Email, turn off Confirm email, and make sure Enable Email Provider is on.';
+  }
+
+  if (
+    normalized.includes('email provider is disabled') ||
+    normalized.includes('email signups are disabled') ||
+    normalized.includes('email logins are disabled') ||
+    normalized.includes('email sign-in is disabled')
+  ) {
+    return 'Email sign-in is disabled in Supabase. Open Authentication → Providers → Email and turn on Enable Email Provider.';
   }
 
   if (
     normalized.includes('email_address_not_authorized') ||
     normalized.includes('not authorized')
   ) {
-    return "Supabase's default email service can only deliver to project team members. Configure custom SMTP in Supabase under Authentication → Emails → SMTP Settings for real users.";
+    return "Supabase's default email service can only deliver to project team members. Configure custom SMTP in Supabase under Authentication → Emails → SMTP Settings for password-reset emails.";
   }
 
   if (
     normalized.includes('over_email_send_rate_limit') ||
     normalized.includes('rate limit')
   ) {
-    return "Supabase's default email service is limited to 2 emails per hour. Wait before trying again, or configure custom SMTP.";
+    return "Supabase's email service is rate-limited. Wait before trying again, or configure custom SMTP.";
   }
 
   if (normalized.includes('email_address_invalid')) {
     return 'Supabase rejected this email address. Check it for typos and use a valid address.';
-  }
-
-  if (normalized.includes('already confirmed')) {
-    return 'This email address is already confirmed. Sign in with your password instead.';
-  }
-
-  if (normalized.includes('user not found')) {
-    return 'No account exists for this email address. Create an account first.';
   }
 
   return message;
