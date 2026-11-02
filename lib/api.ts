@@ -1,11 +1,11 @@
 import { supabase } from './supabase';
 import type {
   EditorValue,
+  Idea,
+  IdeaStatus,
   Note,
   NoteSummary,
   Profile,
-  Task,
-  TaskStatus,
 } from './types';
 
 const API_URL = (
@@ -118,18 +118,18 @@ export const api = {
       }),
   },
 
-  tasks: {
-    list: (status?: TaskStatus) =>
-      request<{ tasks: Task[] }>(
-        status ? `/api/tasks?status=${status}` : '/api/tasks',
+  ideas: {
+    list: (status?: IdeaStatus) =>
+      request<{ ideas: Idea[] }>(
+        status ? `/api/ideas?status=${status}` : '/api/ideas',
       ),
-    get: (id: number) => request<{ task: Task }>(`/api/tasks/${id}`),
+    get: (id: number) => request<{ idea: Idea }>(`/api/ideas/${id}`),
     create: (input: {
       title: string;
       description?: EditorValue;
-      status?: TaskStatus;
+      status?: IdeaStatus;
     }) =>
-      request<{ task: Task }>('/api/tasks', {
+      request<{ idea: Idea }>('/api/ideas', {
         method: 'POST',
         body: JSON.stringify({
           title: input.title,
@@ -147,11 +147,11 @@ export const api = {
       input: {
         title?: string;
         description?: EditorValue;
-        status?: TaskStatus;
+        status?: IdeaStatus;
         position?: number;
       },
     ) =>
-      request<{ task: Task }>(`/api/tasks/${id}`, {
+      request<{ idea: Idea }>(`/api/ideas/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({
           title: input.title,
@@ -165,13 +165,13 @@ export const api = {
             : {}),
         }),
       }),
-    move: (id: number, status: TaskStatus) =>
-      request<{ task: Task }>(`/api/tasks/${id}/status`, {
+    move: (id: number, status: IdeaStatus) =>
+      request<{ idea: Idea }>(`/api/ideas/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       }),
     remove: (id: number) =>
-      request<{ ok: true; id: number }>(`/api/tasks/${id}`, {
+      request<{ ok: true; id: number }>(`/api/ideas/${id}`, {
         method: 'DELETE',
       }),
   },

@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react';
 import {
-  ListTodo,
+  Lightbulb,
   Plus,
   Save,
   Search,
@@ -32,21 +32,21 @@ import {
 } from '@/lib/styles';
 import {
   createEmptyDoc,
+  IDEA_STATUSES,
   STATUS_META,
-  TASK_STATUSES,
   type EditorValue,
+  type Idea,
+  type IdeaStatus,
   type RichTextDoc,
-  type Task,
-  type TaskStatus,
 } from '@/lib/types';
 
-export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+export default function IdeasPage() {
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState<RichTextDoc | null>(null);
   const [descriptionText, setDescriptionText] = useState('');
-  const [status, setStatus] = useState<TaskStatus>('planned');
+  const [status, setStatus] = useState<IdeaStatus>('planned');
   const [isNew, setIsNew] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [dirty, setDirty] = useState(false);
@@ -55,15 +55,15 @@ export default function TasksPage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<TaskStatus | 'all'>('all');
+  const [filter, setFilter] = useState<IdeaStatus | 'all'>('all');
   const [search, setSearch] = useState('');
 
-  const openTask = useCallback((task: Task) => {
-    setSelectedId(task.id);
-    setTitle(task.title);
-    setDescription(task.description);
-    setDescriptionText(task.description_text);
-    setStatus(task.status);
+  const openIdea = useCallback((idea: Idea) => {
+    setSelectedId(idea.id);
+    setTitle(idea.title);
+    setDescription(idea.description);
+    setDescriptionText(idea.description_text);
+    setStatus(idea.status);
     setIsNew(false);
     setDirty(false);
     setEditorKey((key) => key + 1);
@@ -75,10 +75,10 @@ export default function TasksPage() {
 
     (async () => {
       try {
-        const { tasks: fetched } = await api.tasks.list();
+        const { ideas: fetched } = await api.ideas.list();
         if (!active) return;
-        setTasks(fetched);
-        if (fetched[0]) openTask(fetched[0]);
+        setIdeas(fetched);
+        if (fetched[0]) openIdea(fetched[0]);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
       } finally {
@@ -89,7 +89,7 @@ export default function TasksPage() {
     return () => {
       active = false;
     };
-  }, [openTask]);
+  }, [openIdea]);
 
   function handleNew() {
     setSelectedId(null);
@@ -111,7 +111,7 @@ export default function TasksPage() {
 
   async function handleSave() {
     if (!title.trim()) {
-      setError('Give your task a title before saving.');
+      setError('Give your idea a title before saving.');
       return;
     }
 
@@ -127,18 +127,18 @@ export default function TasksPage() {
       };
 
       if (isNew) {
-        const { task } = await api.tasks.create(payload);
-        setTasks((previous) => [...previous, task]);
-        setSelectedId(task.id);
+        const { idea } = await api.ideas.create(payload);
+        setIdeas((previous) => [...previous, idea]);
+        setSelectedId(idea.id);
         setIsNew(false);
-        setTitle(task.title);
-        setDescription(task.description);
-        setDescriptionText(task.description_text);
-        setStatus(task.status);
+        setTitle(idea.title);
+        setDescription(idea.description);
+        setDescriptionText(idea.description_text);
+        setStatus(idea.status);
       } else if (selectedId !== null) {
-        const { task } = await api.tasks.update(selectedId, payload);
-        setTasks((previous) =>
-          previous.map((item) => (item.id === task.id ? task : item)),
+        const { idea } = await api.ideas.update(selectedId, payload);
+        setIdeas((previous) =>
+          previous.map((item) => (item.id === idea.id ? idea : item)),
         );
       }
 
@@ -155,11 +155,11 @@ export default function TasksPage() {
 
     setDeleting(true);
     try {
-      await api.tasks.remove(selectedId);
-      const remaining = tasks.filter((item) => item.id !== selectedId);
-      setTasks(remaining);
+      await api.ideas.remove(selectedId);
+      const remaining = ideas.filter((item) => item.id !== selectedId);
+      setIdeas(remaining);
       if (remaining[0]) {
-        openTask(remaining[0]);
+        openIdea(remaining[0]);
       } else {
         setSelectedId(null);
         setIsNew(false);
@@ -177,29 +177,29 @@ export default function TasksPage() {
     }
   }
 
-  const visibleTasks = useMemo(() => {
+  const visibleIdeas = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return tasks.filter((task) => {
-      if (filter !== 'all' && task.status !== filter) return false;
+    return ideas.filter((idea) => {
+      if (filter !== 'all' && idea.status !== filter) return false;
       if (!query) return true;
       return (
-        task.title.toLowerCase().includes(query) ||
-        task.description_text.toLowerCase().includes(query)
+        idea.title.toLowerCase().includes(query) ||
+        idea.description_text.toLowerCase().includes(query)
       );
     });
-  }, [tasks, filter, search]);
+  }, [ideas, filter, search]);
 
   const counts = useMemo(() => {
-    const result: Record<TaskStatus | 'all', number> = {
-      all: tasks.length,
+    const result: Record<IdeaStatus | 'all', number> = {
+      all: ideas.length,
       planned: 0,
       in_progress: 0,
       feature_request: 0,
       completed: 0,
     };
-    for (const task of tasks) result[task.status] += 1;
+    for (const idea of ideas) result[idea.status] += 1;
     return result;
-  }, [tasks]);
+  }, [ideas]);
 
   const hasSelection = isNew || selectedId !== null;
 
@@ -207,14 +207,14 @@ export default function TasksPage() {
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
       <div className="animate-rise flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className={pageTitleClass}>Tasks</h1>
+          <h1 className={pageTitleClass}>Ideas</h1>
           <p className={pageSubtitleClass}>
-            A title and a rich description for everything you need to do.
+            Capture an idea and give it the detail it deserves.
           </p>
         </div>
         <button type="button" onClick={handleNew} className={primaryButton}>
           <Plus className="h-4 w-4" />
-          New task
+          New idea
         </button>
       </div>
 
@@ -233,14 +233,14 @@ export default function TasksPage() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search tasks…"
-                aria-label="Search tasks"
+                placeholder="Search ideas…"
+                aria-label="Search ideas"
                 className={`${inputClass} bg-slate-50 pl-9 dark:bg-slate-800/60`}
               />
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {(['all', ...TASK_STATUSES] as const).map((value) => {
+              {(['all', ...IDEA_STATUSES] as const).map((value) => {
                 const active = filter === value;
                 const label =
                   value === 'all' ? 'All' : STATUS_META[value].short;
@@ -274,12 +274,12 @@ export default function TasksPage() {
               </div>
             )}
 
-            {!loading && tasks.length === 0 && (
+            {!loading && ideas.length === 0 && (
               <div className="p-2">
                 <EmptyState
-                  icon={ListTodo}
-                  title="No tasks yet"
-                  description="Add your first task and move it across the board as you work."
+                  icon={Lightbulb}
+                  title="No ideas yet"
+                  description="Add your first idea and move it across the board as you work."
                   action={
                     <button
                       type="button"
@@ -287,27 +287,27 @@ export default function TasksPage() {
                       className={primaryButton}
                     >
                       <Plus className="h-4 w-4" />
-                      New task
+                      New idea
                     </button>
                   }
                 />
               </div>
             )}
 
-            {!loading && tasks.length > 0 && visibleTasks.length === 0 && (
+            {!loading && ideas.length > 0 && visibleIdeas.length === 0 && (
               <p className="px-3 py-8 text-center text-sm text-slate-400">
-                No tasks match this filter.
+                No ideas match this filter.
               </p>
             )}
 
             {!loading &&
-              visibleTasks.map((task) => {
-                const active = task.id === selectedId && !isNew;
+              visibleIdeas.map((idea) => {
+                const active = idea.id === selectedId && !isNew;
                 return (
                   <button
-                    key={task.id}
+                    key={idea.id}
                     type="button"
-                    onClick={() => openTask(task)}
+                    onClick={() => openIdea(idea)}
                     aria-current={active ? 'true' : undefined}
                     className={`mb-1 w-full rounded-xl px-3 py-2.5 text-left transition ${
                       active
@@ -323,19 +323,19 @@ export default function TasksPage() {
                             : 'text-slate-700 dark:text-slate-300'
                         }`}
                       >
-                        {task.title}
+                        {idea.title}
                       </span>
                       <span className="shrink-0">
-                        <StatusBadge status={task.status} />
+                        <StatusBadge status={idea.status} />
                       </span>
                     </span>
-                    {task.description_text.trim() && (
+                    {idea.description_text.trim() && (
                       <span className="mt-1 block truncate text-xs text-slate-400">
-                        {truncate(task.description_text, 56)}
+                        {truncate(idea.description_text, 56)}
                       </span>
                     )}
                     <span className="mt-1 block text-[11px] text-slate-400">
-                      Updated {relativeTime(task.updated_at)}
+                      Updated {relativeTime(idea.updated_at)}
                     </span>
                   </button>
                 );
@@ -346,9 +346,9 @@ export default function TasksPage() {
         <section className="min-w-0">
           {!hasSelection ? (
             <EmptyState
-              icon={ListTodo}
-              title="Select a task"
-              description="Choose a task from the list or create a new one to see its title and rich description."
+              icon={Lightbulb}
+              title="Select an idea"
+              description="Choose an idea from the list or create a new one to see its title and rich description."
               action={
                 <button
                   type="button"
@@ -356,7 +356,7 @@ export default function TasksPage() {
                   className={primaryButton}
                 >
                   <Plus className="h-4 w-4" />
-                  New task
+                  New idea
                 </button>
               }
               className="min-h-[440px] bg-white dark:bg-slate-900"
@@ -366,12 +366,12 @@ export default function TasksPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
                 <div>
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    {isNew ? 'New task' : 'Task details'}
+                    {isNew ? 'New idea' : 'Idea details'}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-400">
                     {isNew
                       ? 'Give it a title and add as much detail as you need.'
-                      : 'Changes are saved when you press Save task.'}
+                      : 'Changes are saved when you press Save idea.'}
                   </p>
                 </div>
                 {!isNew && (
@@ -379,7 +379,7 @@ export default function TasksPage() {
                     type="button"
                     onClick={() => setConfirmingDelete(true)}
                     className={ghostButton}
-                    title="Delete task"
+                    title="Delete idea"
                   >
                     <Trash2 className="h-4 w-4" />
                     <span className="hidden sm:inline">Delete</span>
@@ -389,37 +389,37 @@ export default function TasksPage() {
 
               <div className="space-y-5 p-4 sm:p-5">
                 <div>
-                  <label htmlFor="task-title" className={labelClass}>
+                  <label htmlFor="idea-title" className={labelClass}>
                     Title
                   </label>
                   <input
-                    id="task-title"
+                    id="idea-title"
                     type="text"
                     value={title}
                     onChange={(event) => {
                       setTitle(event.target.value);
                       setDirty(true);
                     }}
-                    placeholder="What needs to be done?"
+                    placeholder="What is your idea?"
                     maxLength={200}
                     className={`${inputClass} text-base font-medium`}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="task-status" className={labelClass}>
+                  <label htmlFor="idea-status" className={labelClass}>
                     Status
                   </label>
                   <select
-                    id="task-status"
+                    id="idea-status"
                     value={status}
                     onChange={(event) => {
-                      setStatus(event.target.value as TaskStatus);
+                      setStatus(event.target.value as IdeaStatus);
                       setDirty(true);
                     }}
                     className={`${inputClass} sm:max-w-xs`}
                   >
-                    {TASK_STATUSES.map((value) => (
+                    {IDEA_STATUSES.map((value) => (
                       <option key={value} value={value}>
                         {STATUS_META[value].label}
                       </option>
@@ -458,7 +458,7 @@ export default function TasksPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  {saving ? 'Saving…' : 'Save task'}
+                  {saving ? 'Saving…' : 'Save idea'}
                 </button>
               </div>
             </div>
@@ -468,9 +468,9 @@ export default function TasksPage() {
 
       <ConfirmDialog
         open={confirmingDelete}
-        title="Delete this task?"
+        title="Delete this idea?"
         description="This cannot be undone."
-        confirmLabel="Delete task"
+        confirmLabel="Delete idea"
         tone="danger"
         busy={deleting}
         onConfirm={() => void handleDelete()}

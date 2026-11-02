@@ -15,8 +15,8 @@ const FEATURES = [
   },
   {
     icon: ListTodo,
-    title: 'Focused tasks',
-    description: 'A clear title and a rich description for every task.',
+    title: 'Focused ideas',
+    description: 'A clear title and a rich description for every idea.',
   },
   {
     icon: Kanban,
@@ -67,7 +67,7 @@ export default function AuthLayout({
             everything on your mind.
           </h1>
           <p className="mt-4 text-base leading-7 text-slate-300">
-            Capture notes, keep tasks moving and see the whole picture on one
+            Capture notes, keep ideas moving and see the whole picture on one
             board.
           </p>
 

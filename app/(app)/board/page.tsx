@@ -22,19 +22,19 @@ import {
   secondaryButton,
 } from '@/lib/styles';
 import {
+  IDEA_STATUSES,
   STATUS_META,
-  TASK_STATUSES,
-  type Task,
-  type TaskStatus,
+  type Idea,
+  type IdeaStatus,
 } from '@/lib/types';
 
 export default function BoardPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
-  const [addingTo, setAddingTo] = useState<TaskStatus | null>(null);
+  const [dragOver, setDragOver] = useState<IdeaStatus | null>(null);
+  const [addingTo, setAddingTo] = useState<IdeaStatus | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -43,9 +43,9 @@ export default function BoardPage() {
 
     (async () => {
       try {
-        const { tasks: fetched } = await api.tasks.list();
+        const { ideas: fetched } = await api.ideas.list();
         if (!active) return;
-        setTasks(fetched);
+        setIdeas(fetched);
         setError(null);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -60,54 +60,54 @@ export default function BoardPage() {
   }, []);
 
   const grouped = useMemo(() => {
-    const result: Record<TaskStatus, Task[]> = {
+    const result: Record<IdeaStatus, Idea[]> = {
       planned: [],
       in_progress: [],
       feature_request: [],
       completed: [],
     };
-    for (const task of tasks) {
-      result[task.status].push(task);
+    for (const idea of ideas) {
+      result[idea.status].push(idea);
     }
-    for (const status of TASK_STATUSES) {
+    for (const status of IDEA_STATUSES) {
       result[status].sort((a, b) => a.position - b.position);
     }
     return result;
-  }, [tasks]);
+  }, [ideas]);
 
-  async function moveTask(id: number, nextStatus: TaskStatus) {
-    const existing = tasks.find((task) => task.id === id);
+  async function moveIdea(id: number, nextStatus: IdeaStatus) {
+    const existing = ideas.find((idea) => idea.id === id);
     if (!existing || existing.status === nextStatus) return;
 
-    setTasks((previous) =>
-      previous.map((task) =>
-        task.id === id ? { ...task, status: nextStatus } : task,
+    setIdeas((previous) =>
+      previous.map((idea) =>
+        idea.id === id ? { ...idea, status: nextStatus } : idea,
       ),
     );
     setError(null);
 
     try {
-      const { task: updated } = await api.tasks.move(id, nextStatus);
-      setTasks((previous) =>
-        previous.map((task) => (task.id === id ? updated : task)),
+      const { idea: updated } = await api.ideas.move(id, nextStatus);
+      setIdeas((previous) =>
+        previous.map((idea) => (idea.id === id ? updated : idea)),
       );
     } catch (moveError) {
-      setTasks((previous) =>
-        previous.map((task) => (task.id === id ? existing : task)),
+      setIdeas((previous) =>
+        previous.map((idea) => (idea.id === id ? existing : idea)),
       );
       setError(errorMessage(moveError));
     }
   }
 
-  async function handleQuickAdd(status: TaskStatus) {
+  async function handleQuickAdd(status: IdeaStatus) {
     const title = newTitle.trim();
     if (!title) return;
 
     setCreating(true);
     setError(null);
     try {
-      const { task } = await api.tasks.create({ title, status });
-      setTasks((previous) => [...previous, task]);
+      const { idea } = await api.ideas.create({ title, status });
+      setIdeas((previous) => [...previous, idea]);
       setNewTitle('');
       setAddingTo(null);
     } catch (createError) {
@@ -123,11 +123,11 @@ export default function BoardPage() {
         <div>
           <h1 className={pageTitleClass}>Board</h1>
           <p className={pageSubtitleClass}>
-            Drag cards between columns, or use the status menu on a card.
+            Drag idea cards between columns, or use the status menu on a card.
           </p>
         </div>
-        <Link href="/tasks" className={secondaryButton}>
-          Manage tasks
+        <Link href="/ideas" className={secondaryButton}>
+          Manage ideas
           <ArrowUpRight className="h-4 w-4" />
         </Link>
       </div>
@@ -140,7 +140,7 @@ export default function BoardPage() {
 
       {loading ? (
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {TASK_STATUSES.map((status) => (
+          {IDEA_STATUSES.map((status) => (
             <div
               key={status}
               className={`${cardClass} min-h-[420px] p-3`}
@@ -159,9 +159,9 @@ export default function BoardPage() {
         </div>
       ) : (
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {TASK_STATUSES.map((status) => {
+          {IDEA_STATUSES.map((status) => {
             const meta = STATUS_META[status];
-            const columnTasks = grouped[status];
+            const columnIdeas = grouped[status];
             const isOver = dragOver === status;
 
             return (
@@ -188,7 +188,7 @@ export default function BoardPage() {
                   setDragOver(null);
                   setDraggingId(null);
                   if (Number.isInteger(id) && id > 0) {
-                    void moveTask(id, status);
+                    void moveIdea(id, status);
                   }
                 }}
                 className={`flex min-h-[440px] flex-col rounded-2xl border p-3 transition ${meta.column} ${
@@ -204,7 +204,7 @@ export default function BoardPage() {
                       {meta.label}
                     </h2>
                     <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900/80 dark:text-slate-400 dark:ring-slate-700">
-                      {columnTasks.length}
+                      {columnIdeas.length}
                     </span>
                   </div>
                   <button
@@ -213,7 +213,7 @@ export default function BoardPage() {
                       setAddingTo(addingTo === status ? null : status);
                       setNewTitle('');
                     }}
-                    aria-label={`Add a task to ${meta.label}`}
+                    aria-label={`Add an idea to ${meta.label}`}
                     className="grid h-7 w-7 place-items-center rounded-lg text-slate-500 transition hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                   >
                     {addingTo === status ? (
@@ -241,7 +241,7 @@ export default function BoardPage() {
                           setNewTitle('');
                         }
                       }}
-                      placeholder="Task title, then Enter"
+                      placeholder="Idea title, then Enter"
                       maxLength={200}
                       className={`${inputClass} px-2.5 py-2 text-xs`}
                     />
@@ -270,25 +270,25 @@ export default function BoardPage() {
                 )}
 
                 <div className="mt-3 flex-1 space-y-2">
-                  {columnTasks.length === 0 && addingTo !== status && (
+                  {columnIdeas.length === 0 && addingTo !== status && (
                     <div className="flex h-28 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/70 bg-white/40 px-3 text-center dark:border-slate-700 dark:bg-slate-900/40">
                       <Kanban className="h-5 w-5 text-slate-300 dark:text-slate-600" />
                       <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
-                        Drop a task here or add one.
+                        Drop an idea here or add one.
                       </p>
                     </div>
                   )}
 
-                  {columnTasks.map((task) => (
+                  {columnIdeas.map((idea) => (
                     <article
-                      key={task.id}
+                      key={idea.id}
                       draggable
                       onDragStart={(event) => {
-                        setDraggingId(task.id);
+                        setDraggingId(idea.id);
                         event.dataTransfer.effectAllowed = 'move';
                         event.dataTransfer.setData(
                           'text/plain',
-                          String(task.id),
+                          String(idea.id),
                         );
                       }}
                       onDragEnd={() => {
@@ -296,7 +296,7 @@ export default function BoardPage() {
                         setDragOver(null);
                       }}
                       className={`group rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/20 dark:hover:border-slate-600 ${
-                        draggingId === task.id
+                        draggingId === idea.id
                           ? 'cursor-grabbing opacity-40'
                           : 'cursor-grab'
                       }`}
@@ -305,42 +305,42 @@ export default function BoardPage() {
                         <GripVertical className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300 group-hover:text-slate-400 dark:text-slate-600 dark:group-hover:text-slate-500" />
                         <div className="min-w-0 flex-1">
                           <Link
-                            href="/tasks"
+                            href="/ideas"
                             className="line-clamp-2 text-sm font-medium leading-5 text-slate-800 transition hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-400"
                           >
-                            {task.title}
+                            {idea.title}
                           </Link>
-                          {task.description_text.trim() && (
+                          {idea.description_text.trim() && (
                             <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-400 dark:text-slate-500">
-                              {truncate(task.description_text, 90)}
+                              {truncate(idea.description_text, 90)}
                             </p>
                           )}
                         </div>
                       </div>
 
                       <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-800">
-                        <StatusBadge status={task.status} />
+                        <StatusBadge status={idea.status} />
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                          {relativeTime(task.updated_at)}
+                          {relativeTime(idea.updated_at)}
                         </span>
                       </div>
 
                       <label className="mt-2 block">
                         <span className="sr-only">
-                          Move “{task.title}” to another column
+                          Move “{idea.title}” to another column
                         </span>
                         <select
-                          value={task.status}
+                          value={idea.status}
                           onChange={(event) =>
-                            void moveTask(
-                              task.id,
-                              event.target.value as TaskStatus,
+                            void moveIdea(
+                              idea.id,
+                              event.target.value as IdeaStatus,
                             )
                           }
                           onMouseDown={(event) => event.stopPropagation()}
                           className="w-full cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-500 outline-none transition hover:bg-slate-100 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:focus:border-indigo-600"
                         >
-                          {TASK_STATUSES.map((value) => (
+                          {IDEA_STATUSES.map((value) => (
                             <option key={value} value={value}>
                               Move to {STATUS_META[value].label}
                             </option>

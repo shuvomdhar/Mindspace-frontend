@@ -1,6 +1,6 @@
-import { STATUS_META, type TaskStatus } from '@/lib/types';
+import { STATUS_META, type IdeaStatus } from '@/lib/types';
 
-export function StatusBadge({ status }: { status: TaskStatus }) {
+export function StatusBadge({ status }: { status: IdeaStatus }) {
   const meta = STATUS_META[status];
   return (
     <span
@@ -12,7 +12,7 @@ export function StatusBadge({ status }: { status: TaskStatus }) {
   );
 }
 
-export function StatusDot({ status }: { status: TaskStatus }) {
+export function StatusDot({ status }: { status: IdeaStatus }) {
   return (
     <span
       className={`h-2 w-2 rounded-full ${STATUS_META[status].dot}`}

@@ -117,7 +117,7 @@ export default function SignupPage() {
         Create your space
       </h1>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        One account for your notes, tasks and board.
+        One account for your notes, ideas and board.
       </p>
 
       {!isSupabaseConfigured && (

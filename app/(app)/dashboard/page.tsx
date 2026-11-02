@@ -26,9 +26,9 @@ import {
 } from '@/lib/styles';
 import {
   STATUS_META,
-  TASK_STATUSES,
+  IDEA_STATUSES,
+  type Idea,
   type NoteSummary,
-  type Task,
 } from '@/lib/types';
 
 const TONES = {
@@ -79,7 +79,7 @@ function StatCard({
 export default function DashboardPage() {
   const { user } = useAuth();
   const [notes, setNotes] = useState<NoteSummary[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,13 +88,13 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const [notesResult, tasksResult] = await Promise.all([
+        const [notesResult, ideasResult] = await Promise.all([
           api.notes.list(),
-          api.tasks.list(),
+          api.ideas.list(),
         ]);
         if (!active) return;
         setNotes(notesResult.notes);
-        setTasks(tasksResult.tasks);
+        setIdeas(ideasResult.ideas);
         setError(null);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -115,12 +115,12 @@ export default function DashboardPage() {
     user?.email?.split('@')[0] ||
     'there';
 
-  const completed = tasks.filter((task) => task.status === 'completed').length;
-  const openTasks = tasks.length - completed;
+  const completed = ideas.filter((idea) => idea.status === 'completed').length;
+  const openIdeas = ideas.length - completed;
   const completionRate =
-    tasks.length === 0 ? 0 : Math.round((completed / tasks.length) * 100);
-  const focusTasks = tasks
-    .filter((task) => task.status !== 'completed')
+    ideas.length === 0 ? 0 : Math.round((completed / ideas.length) * 100);
+  const focusIdeas = ideas
+    .filter((idea) => idea.status !== 'completed')
     .slice(0, 4);
 
   const greeting = useMemo(() => {
@@ -140,8 +140,8 @@ export default function DashboardPage() {
           <h1 className={pageTitleClass}>Your space at a glance</h1>
           <p className={pageSubtitleClass}>
             {loading
-              ? 'Gathering your notes and tasks…'
-              : `${pluralize(notes.length, 'note')} · ${pluralize(tasks.length, 'task')} · ${completionRate}% complete`}
+              ? 'Gathering your notes and ideas…'
+              : `${pluralize(notes.length, 'note')} · ${pluralize(ideas.length, 'idea')} · ${completionRate}% complete`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -172,8 +172,8 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={ListTodo}
-          label="Open tasks"
-          value={loading ? '—' : openTasks}
+          label="Open ideas"
+          value={loading ? '—' : openIdeas}
           hint="Planned, in progress or requested"
           tone="blue"
         />
@@ -214,11 +214,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-5 space-y-4">
-            {TASK_STATUSES.map((status) => {
+            {IDEA_STATUSES.map((status) => {
               const meta = STATUS_META[status];
-              const count = tasks.filter((task) => task.status === status).length;
+              const count = ideas.filter((idea) => idea.status === status).length;
               const percent =
-                tasks.length === 0 ? 0 : Math.round((count / tasks.length) * 100);
+                ideas.length === 0 ? 0 : Math.round((count / ideas.length) * 100);
               return (
                 <div key={status}>
                   <div className="flex items-center justify-between text-sm">
@@ -272,7 +272,7 @@ export default function DashboardPage() {
             </Link>
 
             <Link
-              href="/tasks"
+              href="/ideas"
               className="group flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-800 dark:hover:bg-slate-800/60"
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-500 dark:bg-blue-950/60 dark:text-blue-300">
@@ -280,7 +280,7 @@ export default function DashboardPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  Add a task
+                  Add an idea
                 </span>
                 <span className="mt-0.5 block text-[11px] text-slate-400 dark:text-slate-500">
                   Give your next step a title
@@ -381,10 +381,10 @@ export default function DashboardPage() {
               In focus
             </h2>
             <Link
-              href="/tasks"
+              href="/ideas"
               className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 transition hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
-              All tasks
+              All ideas
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -398,35 +398,35 @@ export default function DashboardPage() {
                 />
               ))}
 
-            {!loading && focusTasks.length === 0 && (
+            {!loading && focusIdeas.length === 0 && (
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-800/40">
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                   Nothing on your plate
                 </p>
                 <Link
-                  href="/tasks"
+                  href="/ideas"
                   className="mt-2 inline-flex text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                 >
-                  Add a task
+                  Add an idea
                 </Link>
               </div>
             )}
 
             {!loading &&
-              focusTasks.map((task) => (
+              focusIdeas.map((idea) => (
                 <Link
-                  key={task.id}
-                  href="/tasks"
+                  key={idea.id}
+                  href="/ideas"
                   className="group flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-800 dark:hover:bg-slate-800/60"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                      {task.title}
+                      {idea.title}
                     </span>
                     <span className="mt-1 flex items-center gap-2">
-                      <StatusBadge status={task.status} />
+                      <StatusBadge status={idea.status} />
                       <span className="text-[11px] text-slate-400">
-                        {relativeTime(task.updated_at)}
+                        {relativeTime(idea.updated_at)}
                       </span>
                     </span>
                   </span>

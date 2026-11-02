@@ -1,12 +1,12 @@
 import type { JSONContent } from '@tiptap/react';
 
-export type TaskStatus =
+export type IdeaStatus =
   | 'planned'
   | 'in_progress'
   | 'feature_request'
   | 'completed';
 
-export const TASK_STATUSES: TaskStatus[] = [
+export const IDEA_STATUSES: IdeaStatus[] = [
   'planned',
   'in_progress',
   'feature_request',
@@ -23,7 +23,7 @@ export interface StatusMeta {
   columnHeader: string;
 }
 
-export const STATUS_META: Record<TaskStatus, StatusMeta> = {
+export const STATUS_META: Record<IdeaStatus, StatusMeta> = {
   planned: {
     label: 'Planned',
     short: 'Planned',
@@ -105,13 +105,13 @@ export interface Note extends NoteSummary {
   content: RichTextDoc;
 }
 
-export interface Task {
+export interface Idea {
   id: number;
   user_id: string;
   title: string;
   description: RichTextDoc;
   description_text: string;
-  status: TaskStatus;
+  status: IdeaStatus;
   position: number;
   created_at: string;
   updated_at: string;

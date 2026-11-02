@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Mindspace — Notes, Tasks & Board',
+  title: 'Mindspace — Notes, Ideas & Board',
   description:
-    'A calm workspace for notes, tasks and a kanban board. Built with Next.js, Express and Supabase.',
+    'A calm workspace for notes, ideas and a kanban board. Built with Next.js, Express and Supabase.',
 };
 
 export const viewport: Viewport = {

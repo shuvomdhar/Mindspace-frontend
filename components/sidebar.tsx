@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Kanban,
   LayoutDashboard,
-  ListTodo,
+  Lightbulb,
   LogOut,
   Menu,
   NotebookPen,
@@ -20,7 +20,7 @@ import { initials } from '@/lib/format';
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/notes', label: 'Notes', icon: NotebookPen },
-  { href: '/tasks', label: 'Tasks', icon: ListTodo },
+  { href: '/ideas', label: 'Ideas', icon: Lightbulb },
   { href: '/board', label: 'Board', icon: Kanban },
   { href: '/settings', label: 'Settings', icon: Settings },
 ] as const;
